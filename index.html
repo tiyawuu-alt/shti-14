@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHTI - 深海花园人格测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: #fddfdf;
+            color: #000;
+            font-weight: bold;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .start-page, .question-page, .result-page {
+            display: none;
+            margin-top: 40px;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .main-title {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .sub-title {
+            font-size: 18px;
+            margin-bottom: 50px;
+            opacity: 0.9;
+        }
+
+        .input-name {
+            width: 80%;
+            padding: 12px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid #000;
+            background: #fff;
+            margin-bottom: 30px;
+            outline: none;
+            text-align: center;
+            color: #000;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #fff;
+            border: 2px solid #000;
+            cursor: pointer;
+            margin: 10px;
+            color: #000 !important;
+            -webkit-appearance: none;
+        }
+
+        .btn:hover {
+            background: #000;
+            color: #fff !important;
+        }
+
+        .question {
+            font-size: 20px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .option {
+            width: 90%;
+            padding: 15px;
+            background: #fff;
+            border: 2px solid #000;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #000;
+        }
+
+        .option:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .nav-buttons {
+            margin-top: 40px;
+        }
+
+        .result-page {
+            margin-top: 20px !important;
+            padding-bottom: 40px;
+        }
+
+        .result-title {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .result-img {
+            width: 280px;
+            border: 3px solid #e65c8c;
+            margin: 15px auto;
+            display: block;
+        }
+
+        .result-desc {
+            font-size: 18px;
+            margin: 15px 0;
+            line-height: 1.8;
+        }
+
+        .result-content {
+            font-size: 16px;
+            text-align: left;
+            line-height: 1.8;
+            margin: 20px 0;
+            padding: 0 10px;
+        }
+
+        .qrcode {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 80px;
+        }
+
+        #resultCard {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            background: #fddfdf;
+            padding: 30px 20px;
+            text-align: center;
+            border: 2px solid #000;
+            margin: 0 auto;
+        }
+        #cardImage {
+            width: 280px;
+            border: 3px solid #e65c8c;
+            margin: 20px auto;
+        }
+        #cardQrcode {
+            width: 80px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="start-page active" id="startPage">
+            <div class="main-title">SHTI</div>
+            <div class="sub-title">深海花园人格测试</div>
+            <input type="text" class="input-name" id="userName" placeholder="请输入你的昵称">
+            <button class="btn" onclick="startTest()">开始测试</button>
+        </div>
+
+        <div class="question-page" id="questionPage">
+            <div class="question" id="questionText"></div>
+            <div class="options" id="optionsBox"></div>
+            <div class="nav-buttons">
+                <button class="btn" onclick="prevQuestion()">返回上一题</button>
+            </div>
+        </div>
+
+        <div class="result-page" id="resultPage">
+            <div class="result-title" id="resultHeader"></div>
+            <img src="" class="result-img" id="resultImage">
+            <div class="result-desc" id="resultShort"></div>
+            <div class="result-content" id="resultText"></div>
+
+            <!-- 重新答题按钮 -->
+            <div style="margin-top:30px;">
+                <button class="btn" onclick="restartTest()">重新答题</button>
+            </div>
+        </div>
+
+        <div id="resultCard">
+            <h2 id="cardTitle"></h2>
+            <img id="cardImage">
+            <p id="cardDesc" style="font-size: 18px; margin: 10px 0;"></p>
+            <p id="cardText" style="font-size: 16px; text-align:left; line-height:1.6;"></p>
+            <img id="cardQrcode">
+        </div>
+
+        <img src="https://raw.githubusercontent.com/tiyawuu-alt/personalty-test-picture-hub/refs/heads/main/%E5%BE%AE%E4%BF%A1%E4%BA%8C%E7%BB%B4%E7%A0%81.png" class="qrcode">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+        const questions = [
+            {q:"1. 刚上线游戏，你第一件事是？",options:["a. 看任务指引","b. 收花","c. 去好友的花园串门","d. 不知道、都行"]},
+            {q:"2. 看到任务刷新，你会？",options:["a. 立马做任务","b. 先开一下随机土壤","c. 等下再说","d. 不知道、都行"]},
+            {q:"3. 抽到当期星灵花，你会？",options:["a. 截图发群里","b. 这只是我的日常罢了","c. 赶紧把花种田里","d. 不知道、都行"]},
+            {q:"4. 好友发来私信，你______",options:["a. 回一下","b. 不社交，社恐本人","c. 去摸ta的花","d. 不知道、都行"]},
+            {q:"5. 好友雇佣你采珍珠，你______",options:["a. 不要奴役我啊……","b. 雇佣采集系统到底是干嘛的？","c. 我也要雇佣ta","d. 唱《雇佣者》"]},
+            {q:"6. 深海花园更新剧情，你会？",options:["a. 如饥似渴仔细观看","b. 跳过","c. 躺床上随便看一眼","d. 为什么上一题D选项不是“不知道都行”？"]},
+            {q:"7. 你装扮花园的频率是？",options:["a. 每天都在精心布置","b. 想起来就装扮一下，想不起来算了","c. 从未","d. 不知道、都行"]},
+            {q:"8. 如果游戏即将推出新的活动，你会？",options:["a. 超想知道新活动是什么","b. 会有人告诉我的","c. 到时候就知道了","d. 不知道、都行"]},
+            {q:"9. 你种的明明是红玫瑰，长出来的却是胭脂木槿，你的想法是？",options:["a. 赚了","b. 客服何在","c. 什么是胭脂木槿？","d. 我记错了吗？"]},
+            {q:"10. 你玩深海花园的终极目标是？",options:["a. 收集全图鉴，一个都不能少","b. 装扮出全最美的花园","c. 看完所有剧情和故事","d. 没有目的，就是喜欢种花"]}
+        ];
+
+        const scoreRules = {
+            剧情党:{本命7:["6a","10c"],普通1:["5d","6d","8a","9d"]},
+            天赐幸运者:{本命7:["3a","3b","9a"],普通1:[]},
+            花园串门客:{本命7:["1c","4c","5c"],普通1:["4a"]},
+            物资收藏家:{本命7:["1b","2b"],普通1:[]},
+            任务小旋风:{本命7:["1a","2a"],普通1:["5a","8a","9b","6b"]},
+            慵懒赏花人:{本命7:["10d"],普通1:["1d","2c","2d","3d","4b","4d","5b","6c","7c","7d","8b","8c","8d","9c"]},
+            海底造景师:{本命7:["7a","10b"],普通1:["3c","7b"]},
+            花朵收藏家:{本命9:["10a"],普通1:["3c"]}
+        };
+
+        const resultData = {
+            剧情党:{img:"https://raw.githubusercontent.com/tiyawuu-alt/shti-text-result-pics/refs/heads/main/%E5%89%A7%E6%83%85.jpg",short:"好看、爱看。",text:"恭喜你，你是纯粹的剧情党。你玩游戏的核心乐趣从来不是收集与养成，而是沉浸在深海花园的故事世界里。你会认真阅读每一段对话，感受每一段剧情的温度，对游戏的世界观抱有极大的热忱。在你的世界里，故事远比数值和图鉴更有吸引力，你是深海花园最忠实的故事体验者。"},
+            天赐幸运者:{img:"https://raw.githubusercontent.com/tiyawuu-alt/shti-text-result-pics/refs/heads/main/%E5%A4%A9%E8%B5%90.jpg",short:"一发入魂只是我的日常罢了",text:"恭喜你，你拥有令人羡慕的天赐好运。在深海花园里，你总能轻松获得别人梦寐以求的稀有花卉，抽奖、刷新、掉落对你而言毫无难度。你不需要刻意追求，好运就会主动降临，你早已习惯了这份轻而易举的幸运，成为全服玩家都羡慕的存在。"},
+            花园串门客:{img:"https://raw.githubusercontent.com/tiyawuu-alt/shti-text-result-pics/refs/heads/main/%E4%B8%B2%E9%97%A8.jpg",short:"这是什么？花！摸了。",text:"恭喜你，你是热爱互动的花园串门客。你玩游戏的乐趣不在于独自耕耘，而在于穿梭在好友的花园之间，互动、摸花、交流，享受社交带来的快乐。你喜欢热闹的游戏氛围，乐于和其他玩家产生联结，让深海花园变成一个充满温情的小社区。"},
+            物资收藏家:{img:"https://raw.githubusercontent.com/tiyawuu-alt/shti-text-result-pics/refs/heads/main/%E7%89%A9%E8%B5%84.jpg",short:"你怎么知道我爱看末世生存视频？",text:"恭喜你，你是专注积累的物资收藏家。你深知资源的重要性，上线第一时间就是收集物资、储备资源，为花园的发展打下坚实基础。你做事踏实稳重，不追求浮华，只专注于实实在在的积累，是深海花园里最可靠、最务实的玩家。"},
+            任务小旋风:{img:"https://raw.githubusercontent.com/tiyawuu-alt/shti-text-result-pics/refs/heads/main/%E4%BB%BB%E5%8A%A1.jpg",short:"我怎么感觉这么累呢？",text:"恭喜你，你是效率至上的任务小旋风。你拥有极强的执行力，任务刷新就立刻完成，目标明确从不拖延，把游戏打理得井井有条。你习惯用最高效率完成所有目标，虽然偶尔会感到疲惫，但这份认真让你在游戏中始终保持领先。"},
+            慵懒赏花人:{img:"https://raw.githubusercontent.com/tiyawuu-alt/shti-text-result-pics/refs/heads/main/%E6%85%B5%E6%87%92.jpg",short:"挺好的。",text:"恭喜你，你是随性自在的慵懒赏花人。你玩游戏没有任何压力，不赶任务、不追进度、不卷排名，只是享受种花带来的放松与治愈。你遵循自己的节奏，随心所欲，悠然自得，把深海花园当成真正的避风港，享受最简单的快乐。"},
+            海底造景师:{img:"https://raw.githubusercontent.com/tiyawuu-alt/shti-text-result-pics/refs/heads/main/%E9%80%A0%E6%99%AF.jpg",short:"深海花园是一款四字沙盒游戏",text:"恭喜你，你是追求美学的海底造景师。你对花园的外观有着极致的追求，每天精心布置、调整装饰，把自己的花园打造成独一无二的艺术品。你享受创造美的过程，视觉上的舒适与精致，是你玩游戏最大的满足感来源。"},
+            花朵收藏家:{img:"https://raw.githubusercontent.com/tiyawuu-alt/shti-text-result-pics/refs/heads/main/%E8%8A%B1%E6%9C%B5.jpg",short:"全图鉴不是最基本的吗？",text:"恭喜你，你是执念满满的花朵收藏家。你的终极目标就是集齐所有花卉图鉴，不允许有任何遗漏。你对收集有着极致的坚持和热爱，每新增一种花卉都会带来巨大的成就感，全图鉴收集对你而言是理所应当的目标，也是你游戏的核心动力。"}
+        };
+
+        let currentQuestion = 0;
+        let userAnswers = [];
+        let userName = "";
+        let currentType = "";
+
+        function startTest() {
+            userName = document.getElementById("userName").value.trim();
+            if(!userName){alert("请输入你的昵称");return;}
+            document.getElementById("startPage").classList.remove("active");
+            document.getElementById("questionPage").classList.add("active");
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById("questionText").innerText = q.q;
+            const box = document.getElementById("optionsBox");
+            box.innerHTML = "";
+            q.options.forEach(opt=>{
+                const div = document.createElement("div");
+                div.className="option";
+                div.innerText=opt;
+                div.onclick=()=>selectOption(opt.charAt(0));
+                box.appendChild(div);
+            });
+        }
+
+        function selectOption(ans){
+            userAnswers[currentQuestion]=ans;
+            if(currentQuestion < questions.length-1){
+                currentQuestion++; renderQuestion();
+            }else{ calculateResult(); }
+        }
+
+        function prevQuestion(){
+            if(currentQuestion>0){currentQuestion--;renderQuestion();}
+        }
+
+        function calculateResult(){
+            const scores={剧情党:0,天赐幸运者:0,花园串门客:0,物资收藏家:0,任务小旋风:0,慵懒赏花人:0,海底造景师:0,花朵收藏家:0};
+            userAnswers.forEach((ans,i)=>{
+                const k=(i+1)+ans;
+                for(let p in scoreRules){
+                    const r=scoreRules[p];
+                    if(r.本命7?.includes(k)) scores[p]+=7;
+                    if(r.本命9?.includes(k)) scores[p]+=9;
+                    if(r.普通1?.includes(k)) scores[p]+=1;
+                }
+            });
+            let max=-1, res="";
+            for(let p in scores) if(scores[p]>max) {max=scores[p];res=p;}
+            currentType=res; showResult(res);
+        }
+
+        function showResult(p){
+            document.getElementById("questionPage").classList.remove("active");
+            document.getElementById("resultPage").classList.add("active");
+            const d=resultData[p];
+            document.getElementById("resultHeader").innerText=`${userName}，你的人格类型是：`;
+            document.getElementById("resultImage").src=d.img;
+            document.getElementById("resultShort").innerText=d.short;
+            document.getElementById("resultText").innerText=d.text;
+        }
+
+        // 重新答题 → 回到第一题
+        function restartTest(){
+            currentQuestion = 0;
+            userAnswers = [];
+            document.getElementById("resultPage").classList.remove("active");
+            document.getElementById("questionPage").classList.add("active");
+            renderQuestion();
+        }
+
+        async function saveResultImage(){
+            const d=resultData[currentType];
+            document.getElementById("cardTitle").innerText=`${userName}，你的人格类型是：`;
+            document.getElementById("cardImage").src=d.img;
+            document.getElementById("cardDesc").innerText=d.short;
+            document.getElementById("cardText").innerText=d.text;
+            document.getElementById("cardQrcode").src="https://raw.githubusercontent.com/tiyawuu-alt/personalty-test-picture-hub/refs/heads/main/%E5%BE%AE%E4%BF%A1%E4%BA%8C%E7%BB%B4%E7%A0%81.png";
+            
+            const card = document.getElementById("resultCard");
+            card.style.display="block";
+            const canvas = await html2canvas(card, {useCORS:true,scale:2});
+            card.style.display="none";
+            
+            const link = document.createElement("a");
+            link.download = `SHTI-${userName}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+
+        // 长按保存
+        document.getElementById('resultPage').addEventListener('touchstart', function(e) {
+            this.touchTimer = setTimeout(() => {
+                saveResultImage();
+                alert("保存成功！图片已生成");
+            }, 500);
+        });
+        document.getElementById('resultPage').addEventListener('touchend', function(e) {
+            clearTimeout(this.touchTimer);
+        });
+    </script>
+</body>
+</html>
